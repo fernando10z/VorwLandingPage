@@ -32,6 +32,62 @@ const IMG={
 function useVis(th=0.12){const r=useRef(null);const[v,s]=useState(false);useEffect(()=>{const o=new IntersectionObserver(([e])=>e.isIntersecting&&s(true),{threshold:th});r.current&&o.observe(r.current);return()=>o.disconnect()},[th]);return[r,v]}
 function useCnt(end,dur=2200){const[n,sn]=useState(0);const r=useRef(null);const d=useRef(false);useEffect(()=>{const o=new IntersectionObserver(([e])=>{if(e.isIntersecting&&!d.current){d.current=true;const t0=performance.now();const go=now=>{const p=Math.min((now-t0)/dur,1);sn(Math.floor(end*(1-Math.pow(1-p,4))));p<1&&requestAnimationFrame(go)};requestAnimationFrame(go)}},{threshold:0.4});r.current&&o.observe(r.current);return()=>o.disconnect()},[end,dur]);return[n,r]}
 
+function sanitize(str) {
+  if (typeof str !== "string") return "";
+  return str
+    .replace(/[<>]/g, "")           // Elimina < > (previene HTML injection)
+    .replace(/javascript:/gi, "")   // Elimina javascript: URIs
+    .replace(/on\w+=/gi, "")        // Elimina event handlers (onclick=, onerror=, etc.)
+    .replace(/[\r\n]/g, "")         // Elimina saltos de línea (previene email header injection)
+    .trim();
+}
+
+const validators = {
+  nombre: (val) => {
+    const clean = sanitize(val);
+    if (!clean) return { valid: false, error: "Nombre es requerido" };
+    if (clean.length < 2) return { valid: false, error: "Nombre muy corto" };
+    if (clean.length > 100) return { valid: false, error: "Nombre muy largo (máx 100)" };
+    // Solo letras, espacios, tildes y guiones
+    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s\-'.]+$/.test(clean)) {
+      return { valid: false, error: "Nombre contiene caracteres no válidos" };
+    }
+    return { valid: true, error: "" };
+  },
+
+  email: (val) => {
+    const clean = sanitize(val).toLowerCase();
+    if (!clean) return { valid: false, error: "Email es requerido" };
+    // Regex robusto para email
+    const emailRegex = /^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$/;
+    if (!emailRegex.test(clean)) {
+      return { valid: false, error: "Email no válido" };
+    }
+    if (clean.length > 254) return { valid: false, error: "Email muy largo" };
+    return { valid: true, error: "" };
+  },
+
+  telefono: (val) => {
+    const clean = sanitize(val);
+    if (!clean) return { valid: false, error: "Teléfono es requerido" };
+    // Permite: +, números, espacios, guiones, paréntesis
+    const phoneClean = clean.replace(/[\s\-()]/g, "");
+    if (!/^\+?\d{7,15}$/.test(phoneClean)) {
+      return { valid: false, error: "Teléfono no válido (7-15 dígitos)" };
+    }
+    return { valid: true, error: "" };
+  },
+
+  negocio: (val) => {
+    const clean = sanitize(val);
+    if (!clean) return { valid: false, error: "Nombre del negocio es requerido" };
+    if (clean.length < 2) return { valid: false, error: "Nombre muy corto" };
+    if (clean.length > 150) return { valid: false, error: "Nombre muy largo (máx 150)" };
+    return { valid: true, error: "" };
+  },
+};
+
+
 export default function App(){
   const[menu,setMenu]=useState(false);
   const[scr,setScr]=useState(false);
@@ -198,10 +254,12 @@ function VAlerts(){return<div className="vis-p"><div className="vis-h"><span cla
 /* DEMO MODAL */
 function DemoModal({onClose}){
   const[step,setStep]=useState(1);
-  const[form,setForm]=useState({nombre:"",email:"",telefono:"",negocio:""});
+  const[form,setForm]=useState({nombre:"",email:"",telefono:"",negocio:"",website:""});
+  const[errors,setErrors]=useState({});
   const[selDate,setSelDate]=useState(null);
   const[selTime,setSelTime]=useState(null);
   const[sending,setSending]=useState(false);
+  const[submitted,setSubmitted]=useState(false); // anti double-submit
 
   const today=new Date();
   const days=[];
@@ -211,33 +269,64 @@ function DemoModal({onClose}){
   const meses=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
   const diasSem=["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
 
+  // Handler con sanitización en tiempo real
+  const handleChange=(field,value)=>{
+    let clean=sanitize(value);
+    // Teléfono: solo permite +, números, espacios, guiones, paréntesis
+    if(field==="telefono") clean=clean.replace(/[^\d+\s\-()]/g,"");
+    setForm(prev=>({...prev,[field]:clean}));
+    if(errors[field]) setErrors(prev=>({...prev,[field]:""}));
+  };
+
+  // Validar step 1 completo
+  const validateStep1=()=>{
+    const newErrors={};
+    Object.keys(validators).forEach(key=>{
+      const result=validators[key](form[key]);
+      if(!result.valid) newErrors[key]=result.error;
+    });
+    setErrors(newErrors);
+    return Object.keys(newErrors).length===0;
+  };
+
+  const handleNext=()=>{
+    if(validateStep1()) setStep(2);
+  };
+
   const valid1=form.nombre&&form.email&&form.telefono&&form.negocio;
   const valid2=selDate&&selTime;
 
   const handleSubmit=()=>{
+    if(sending||submitted) return;
+    if(form.website){
+      setStep(3);
+      return;
+    }
     setSending(true);
+
     const diasSemFull=["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
     const mesesFull=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
     const fechaStr=`${diasSemFull[selDate.getDay()]} ${selDate.getDate()} de ${mesesFull[selDate.getMonth()]} ${selDate.getFullYear()}`;
 
     // ══════════════════════════════════════════════
-    // CONFIGURA ESTOS 3 VALORES DESDE TU CUENTA EMAILJS:
-    // https://dashboard.emailjs.com
-    const EMAILJS_SERVICE_ID  = "YOUR_SERVICE_ID";   // Ej: "service_abc123"
-    const EMAILJS_TEMPLATE_ID = "YOUR_TEMPLATE_ID";  // Ej: "template_xyz789"
-    const EMAILJS_PUBLIC_KEY  = "YOUR_PUBLIC_KEY";    // Ej: "aB3cD4eF5gH6"
+    const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+    const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+    const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+
     // ══════════════════════════════════════════════
 
+    // Enviar datos ya sanitizados
     emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-      nombre: form.nombre,
-      email: form.email,
-      telefono: form.telefono,
-      negocio: form.negocio,
+      nombre: sanitize(form.nombre),
+      email: sanitize(form.email),
+      telefono: sanitize(form.telefono),
+      negocio: sanitize(form.negocio),
       fecha: fechaStr,
       hora: selTime + " hrs (Lima, Perú)",
     }, EMAILJS_PUBLIC_KEY)
     .then(()=>{
       setSending(false);
+      setSubmitted(true); // marcar como enviado
       setStep(3);
     })
     .catch((err)=>{
@@ -266,26 +355,85 @@ function DemoModal({onClose}){
           <h3 className="dm-title">Agenda tu demo gratuita</h3>
           <p className="dm-sub">15 minutos para mostrarte cómo VORW transforma tu negocio</p>
           <div className="dm-form">
+
+            {/* Honeypot — invisible para humanos, los bots lo llenan */}
+            <div style={{position:"absolute",left:"-9999px",top:"-9999px",opacity:0,height:0,overflow:"hidden"}} aria-hidden="true" tabIndex={-1}>
+              <label htmlFor="website">Website</label>
+              <input
+                id="website"
+                name="website"
+                type="text"
+                value={form.website}
+                onChange={e=>setForm(prev=>({...prev,website:e.target.value}))}
+                autoComplete="off"
+                tabIndex={-1}
+              />
+            </div>
+
+            {/* Nombre */}
             <div className="dm-field">
               <label className="dm-label">Nombre completo</label>
-              <input className="dm-input" placeholder="Ej: Juan Pérez" value={form.nombre} onChange={e=>setForm({...form,nombre:e.target.value})}/>
+              <input
+                className={`dm-input ${errors.nombre?"error":""}`}
+                placeholder="Ej: Juan Pérez"
+                value={form.nombre}
+                maxLength={100}
+                onChange={e=>handleChange("nombre",e.target.value)}
+              />
+              {errors.nombre&&<span className="dm-error">{errors.nombre}</span>}
             </div>
+
+            {/* Email */}
             <div className="dm-field">
               <label className="dm-label">Email</label>
-              <input className="dm-input" type="email" placeholder="juan@empresa.com" value={form.email} onChange={e=>setForm({...form,email:e.target.value})}/>
+              <input
+                className={`dm-input ${errors.email?"error":""}`}
+                type="email"
+                placeholder="juan@empresa.com"
+                value={form.email}
+                maxLength={254}
+                onChange={e=>handleChange("email",e.target.value)}
+                onBlur={()=>{
+                  if(form.email){
+                    const r=validators.email(form.email);
+                    if(!r.valid) setErrors(prev=>({...prev,email:r.error}));
+                  }
+                }}
+              />
+              {errors.email&&<span className="dm-error">{errors.email}</span>}
             </div>
+
             <div className="dm-row2">
+              {/* Teléfono */}
               <div className="dm-field">
                 <label className="dm-label">Teléfono</label>
-                <input className="dm-input" type="tel" placeholder="+51 999 999 999" value={form.telefono} onChange={e=>setForm({...form,telefono:e.target.value})}/>
+                <input
+                  className={`dm-input ${errors.telefono?"error":""}`}
+                  type="tel"
+                  placeholder="+51 999 999 999"
+                  value={form.telefono}
+                  maxLength={20}
+                  onChange={e=>handleChange("telefono",e.target.value)}
+                />
+                {errors.telefono&&<span className="dm-error">{errors.telefono}</span>}
               </div>
+
+              {/* Negocio */}
               <div className="dm-field">
                 <label className="dm-label">Nombre del negocio</label>
-                <input className="dm-input" placeholder="Ej: Restaurante El Buen Sabor" value={form.negocio} onChange={e=>setForm({...form,negocio:e.target.value})}/>
+                <input
+                  className={`dm-input ${errors.negocio?"error":""}`}
+                  placeholder="Ej: Restaurante El Buen Sabor"
+                  value={form.negocio}
+                  maxLength={150}
+                  onChange={e=>handleChange("negocio",e.target.value)}
+                />
+                {errors.negocio&&<span className="dm-error">{errors.negocio}</span>}
               </div>
             </div>
+
           </div>
-          <button className={`dm-btn ${valid1?"":"disabled"}`} disabled={!valid1} onClick={()=>setStep(2)}>Siguiente: elegir fecha <Arr/></button>
+          <button className={`dm-btn ${valid1?"":"disabled"}`} disabled={!valid1} onClick={handleNext}>Siguiente: elegir fecha <Arr/></button>
         </div>}
 
         {/* STEP 2: Calendar + Time */}
@@ -316,7 +464,11 @@ function DemoModal({onClose}){
 
           <div className="dm-nav-btns">
             <button className="dm-btn-back" onClick={()=>setStep(1)}>← Volver</button>
-            <button className={`dm-btn ${valid2?"":"disabled"}`} disabled={!valid2} onClick={handleSubmit}>
+            <button
+              className={`dm-btn ${valid2&&!sending?"":"disabled"}`}
+              disabled={!valid2||sending||submitted}
+              onClick={handleSubmit}
+            >
               {sending?"Agendando...":"Confirmar demo"} {!sending&&<Arr/>}
             </button>
           </div>
