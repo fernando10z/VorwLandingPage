@@ -12,13 +12,20 @@ const Arr=()=><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke
 const Chk=({c="currentColor"})=><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>;
 const Play=()=><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 3 20 12 6 21"/></svg>;
 
-/* IMAGES */
+/* IMAGES — imported as Vite modules for production builds */
+import imgHero from './assets/img/cafeteria.jpeg';
+import imgLima from './assets/img/lima.jpeg';
+import imgIquitos from './assets/img/iquitos.jpeg';
+import imgRestaurante from './assets/img/restaurante.jpeg';
+import imgUrbano from './assets/img/restauranteurbano.jpeg';
+import imgLogo from './assets/img/logovorw.png';
+
 const IMG={
-  hero:"/src/assets/img/cafeteria.jpeg",
-  lima:"/src/assets/img/lima.jpeg",
-  iquitos:"/src/assets/img/iquitos.jpeg",
-  restaurante:"/src/assets/img/restaurante.jpeg",
-  urbano:"/src/assets/img/restauranteurbano.jpeg",
+  hero: imgHero,
+  lima: imgLima,
+  iquitos: imgIquitos,
+  restaurante: imgRestaurante,
+  urbano: imgUrbano,
 };
 
 /* HOOKS */
@@ -71,7 +78,7 @@ export default function App(){
       {/* NAV */}
       <nav className={`nav ${scr?"nav-s":""}`}>
         <div className="nav-in">
-          <a href="#" className="logo"><img className="logo-img" src="/src/assets/img/logovorw.png" alt="VORW"/><span className="logo-t">VORW</span></a>
+          <a href="#" className="logo"><img className="logo-img" src={imgLogo} alt="VORW"/><span className="logo-t">VORW</span></a>
           <div className="nav-lk hd-m">{["Solución","Características","Precios","Contacto"].map(x=><a key={x} href={`#${x.toLowerCase()}`} className="nl">{x}</a>)}</div>
           <div className="nav-r hd-m">
             <a href="#" className="nl">Iniciar sesión</a>
@@ -79,7 +86,7 @@ export default function App(){
           </div>
           <button className="m-btn sh-m" onClick={()=>setMenu(!menu)}><span className={`ml ${menu?"o":""}`}/><span className={`ml ${menu?"o":""}`}/><span className={`ml ${menu?"o":""}`}/></button>
         </div>
-        {menu&&<div className="mob-nav">{["Solución","Características","Precios","Contacto"].map(x=><a key={x} href={`#${x.toLowerCase()}`} className="mob-lk" onClick={()=>setMenu(false)}>{x}</a>)}<a href="#demo" className="btn-sm" style={{textAlign:"center"}}>Solicitar Runión</a></div>}
+        {menu&&<div className="mob-nav">{["Solución","Características","Precios","Contacto"].map(x=><a key={x} href={`#${x.toLowerCase()}`} className="mob-lk" onClick={()=>setMenu(false)}>{x}</a>)}<a href="#demo" className="btn-sm" style={{textAlign:"center"}}>Solicitar demo</a></div>}
       </nav>
 
       {/* HERO */}
@@ -90,7 +97,7 @@ export default function App(){
           <h1 className="h-title">Tus cámaras ya ven.<br/><span className="h-accent">Nosotros las hacemos pensar.</span></h1>
           <p className="h-sub">VORW convierte tus cámaras de seguridad en analistas de datos. Conteo de personas, mapas de calor, ocupación en tiempo real — directo a tus gerentes, cada día.</p>
           <div className="h-ctas">
-            <a href="#" onClick={(e)=>{e.preventDefault();setShowDemo(true)}} className="btn-w">Agenda tu reunión gratuita <Arr/></a>
+            <a href="#" onClick={(e)=>{e.preventDefault();setShowDemo(true)}} className="btn-w">Agenda tu demo gratuita <Arr/></a>
             <a href="#video" className="btn-o"><div className="play-c"><Play/></div>Ver en 90 segundos</a>
           </div>
           <div className="h-proof" style={{...a(0.6),opacity:loaded?1:0,transform:loaded?"translateY(0)":"translateY(16px)"}}>
@@ -164,14 +171,14 @@ export default function App(){
       {/* CTA */}
       <section className="cta-sec">
         <div className="cta-bg"><img src={IMG.urbano} alt="" className="cta-bg-img"/><div className="cta-ov"/></div>
-        <div className="cta-ct"><h2 className="cta-h2">¿Listo para convertir tus cámaras en tu mejor fuente de datos?</h2><p className="cta-sub">15 minutos de demo en una reunión. Sin compromiso. Sin tarjeta de crédito.</p><div className="cta-btns"><a href="#" onClick={(e)=>{e.preventDefault();setShowDemo(true)}} className="btn-cta-w">Agendar reunión gratuita <Arr/></a><a href="#" className="btn-cta-o">Hablar con ventas</a></div></div>
+        <div className="cta-ct"><h2 className="cta-h2">¿Listo para convertir tus cámaras en tu mejor fuente de datos?</h2><p className="cta-sub">15 minutos de demo. Sin compromiso. Sin tarjeta de crédito.</p><div className="cta-btns"><a href="#" onClick={(e)=>{e.preventDefault();setShowDemo(true)}} className="btn-cta-w">Agendar demo gratuita <Arr/></a><a href="#" className="btn-cta-o">Hablar con ventas</a></div></div>
       </section>
 
       {/* FOOTER */}
       <footer className="footer">
         <div className="f-inner">
           <div className="f-top">
-            <div className="f-brand"><a href="#" className="logo"><img className="logo-img" src="/src/assets/img/logovorw.png" alt="VORW"/><span className="logo-t">VORW</span></a><p className="f-tagline">Inteligencia visual que transforma la operación de tu negocio.</p></div>
+            <div className="f-brand"><a href="#" className="logo"><img className="logo-img" src={imgLogo} alt="VORW"/><span className="logo-t">VORW</span></a><p className="f-tagline">Inteligencia visual que transforma la operación de tu negocio.</p></div>
             <div className="f-cols">{[{t:"Producto",l:["Características","Precios","Integraciones","API"]},{t:"Empresa",l:["Nosotros","Blog","Carreras","Contacto"]},{t:"Legal",l:["Privacidad","Términos","Seguridad","GDPR"]}].map(c=>(<div key={c.t} className="f-col"><h4 className="f-col-t">{c.t}</h4>{c.l.map(x=><a key={x} href="#" className="f-link">{x}</a>)}</div>))}</div>
           </div>
           <div className="f-bottom"><span>© 2026 VORW. Todos los derechos reservados.</span><span style={{color:"#d1d5db"}}>Hecho con visión en LATAM 🌎</span></div>
@@ -213,9 +220,13 @@ function DemoModal({onClose}){
     const mesesFull=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
     const fechaStr=`${diasSemFull[selDate.getDay()]} ${selDate.getDate()} de ${mesesFull[selDate.getMonth()]} ${selDate.getFullYear()}`;
 
-    const EMAILJS_SERVICE_ID  = "service_nz1lshg"; 
-    const EMAILJS_TEMPLATE_ID = "template_hzchzu3"; 
-    const EMAILJS_PUBLIC_KEY  = "dZkiU1Wbyk1gOFtYd";    
+    // ══════════════════════════════════════════════
+    // CONFIGURA ESTOS 3 VALORES DESDE TU CUENTA EMAILJS:
+    // https://dashboard.emailjs.com
+    const EMAILJS_SERVICE_ID  = "YOUR_SERVICE_ID";   // Ej: "service_abc123"
+    const EMAILJS_TEMPLATE_ID = "YOUR_TEMPLATE_ID";  // Ej: "template_xyz789"
+    const EMAILJS_PUBLIC_KEY  = "YOUR_PUBLIC_KEY";    // Ej: "aB3cD4eF5gH6"
+    // ══════════════════════════════════════════════
 
     emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
       nombre: form.nombre,
@@ -252,8 +263,8 @@ function DemoModal({onClose}){
 
         {/* STEP 1: Form */}
         {step===1&&<div className="dm-step">
-          <h3 className="dm-title">Agenda tu reunión gratuita</h3>
-          <p className="dm-sub">15 minutos para mostrarte cómo VORW transforma tu negocio y impacta en tus decisiones estratégicas</p>
+          <h3 className="dm-title">Agenda tu demo gratuita</h3>
+          <p className="dm-sub">15 minutos para mostrarte cómo VORW transforma tu negocio</p>
           <div className="dm-form">
             <div className="dm-field">
               <label className="dm-label">Nombre completo</label>
@@ -306,7 +317,7 @@ function DemoModal({onClose}){
           <div className="dm-nav-btns">
             <button className="dm-btn-back" onClick={()=>setStep(1)}>← Volver</button>
             <button className={`dm-btn ${valid2?"":"disabled"}`} disabled={!valid2} onClick={handleSubmit}>
-              {sending?"Agendando...":"Confirmar reunión"} {!sending&&<Arr/>}
+              {sending?"Agendando...":"Confirmar demo"} {!sending&&<Arr/>}
             </button>
           </div>
         </div>}
@@ -314,7 +325,7 @@ function DemoModal({onClose}){
         {/* STEP 3: Confirmation */}
         {step===3&&<div className="dm-step dm-confirm">
           <div className="dm-check-circle">✓</div>
-          <h3 className="dm-title">Reunión agendada!</h3>
+          <h3 className="dm-title">¡Demo agendada!</h3>
           <p className="dm-sub">Te enviamos un email de confirmación a <strong>{form.email}</strong></p>
           <div className="dm-summary">
             <div className="dm-sum-row"><span className="dm-sum-label">Fecha</span><span className="dm-sum-val">{diasSem[selDate.getDay()]} {selDate.getDate()} de {meses[selDate.getMonth()]}</span></div>
@@ -322,7 +333,7 @@ function DemoModal({onClose}){
             <div className="dm-sum-row"><span className="dm-sum-label">Negocio</span><span className="dm-sum-val">{form.negocio}</span></div>
             <div className="dm-sum-row"><span className="dm-sum-label">Contacto</span><span className="dm-sum-val">{form.nombre}</span></div>
           </div>
-          <p className="dm-confirm-note">Un miembro del equipo VORW se pondrá en contacto contigo antes de la reunión. ¡Nos vemos pronto!</p>
+          <p className="dm-confirm-note">Un miembro del equipo VORW se pondrá en contacto contigo antes de la demo. ¡Nos vemos pronto!</p>
           <button className="dm-btn" onClick={onClose}>Cerrar</button>
         </div>}
       </div>
