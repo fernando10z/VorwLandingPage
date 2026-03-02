@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from "react";
+import emailjs from '@emailjs/browser';
+
 
 /* ICONS */
 const I=({d,s=24,w=1.5})=><svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={w} strokeLinecap="round" strokeLinejoin="round"><path d={d}/></svg>;
@@ -263,16 +265,29 @@ function DemoModal({onClose}){
     const mesesFull=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
     const fechaStr=`${diasSemFull[selDate.getDay()]} ${selDate.getDate()} de ${mesesFull[selDate.getMonth()]} ${selDate.getFullYear()}`;
 
-    const EMAILJS_SERVICE_ID = typeof import.meta !== 'undefined' ? import.meta.env?.VITE_EMAILJS_SERVICE_ID : '';
-    const EMAILJS_TEMPLATE_ID = typeof import.meta !== 'undefined' ? import.meta.env?.VITE_EMAILJS_TEMPLATE_ID : '';
-    const EMAILJS_PUBLIC_KEY = typeof import.meta !== 'undefined' ? import.meta.env?.VITE_EMAILJS_PUBLIC_KEY : '';
+    const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
 
-    // Simulate success for demo
-    setTimeout(()=>{
-      setSending(false);
-      setSubmitted(true);
-      setStep(3);
-    }, 1200);
+    emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+  nombre: sanitize(form.nombre),
+  email: sanitize(form.email),
+  telefono: sanitize(form.telefono),
+  negocio: sanitize(form.negocio),
+  fecha: fechaStr,
+  hora: selTime + " hrs (Lima, Perú)",
+}, EMAILJS_PUBLIC_KEY)
+.then(()=>{
+  setSending(false);
+  setSubmitted(true);
+  setStep(3);
+})
+.catch((err)=>{
+  console.error("EmailJS error:", err);
+  setSending(false);
+  alert("Hubo un error al enviar. Intenta de nuevo.");
+});
+
   };
 
   return(
